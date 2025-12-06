@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "@useI18n";
 import styles from "./AdvancedSettings.module.scss";
 
@@ -217,21 +218,17 @@ const WebsocketPortContainer = () => {
     );
 };
 
-// Import for Python communication
-import { useStdoutToPython } from "@useStdoutToPython";
-
 // ZLUDA Information Display Component
 const ZLUDAInfoContainer = () => {
     const { t } = useI18n();
-    const { asyncStdoutToPython } = useStdoutToPython();
     const [zludaInfo, setZludaInfo] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchZLUDAInfo = async () => {
             try {
-                // Call Python backend using the standard IPC method
-                const response = await asyncStdoutToPython("/get/data/zluda_installation_info");
+                // Call Rust backend using Tauri invoke
+                const response = await invoke("get_zluda_info");
                 if (response && response.status === 200) {
                     setZludaInfo(response.result);
                 }
@@ -243,7 +240,7 @@ const ZLUDAInfoContainer = () => {
         };
 
         fetchZLUDAInfo();
-    }, [asyncStdoutToPython]);
+    }, []);
 
     if (loading) {
         return (

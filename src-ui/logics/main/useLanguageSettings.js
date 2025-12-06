@@ -1,10 +1,8 @@
+import { invoke } from "@tauri-apps/api/core";
 import { useStore_SelectedPresetTabNumber, useStore_SelectedYourLanguages, useStore_SelectedTargetLanguages, useStore_TranslationEngines, useStore_SelectedTranslationEngines, useStore_SelectableLanguageList } from "@store";
-import { useStdoutToPython } from "@useStdoutToPython";
 import { translator_status } from "@ui_configs";
 
 export const useLanguageSettings = () => {
-    const { asyncStdoutToPython } = useStdoutToPython();
-
     const {
         currentSelectedYourLanguages,
         updateSelectedYourLanguages,
@@ -37,24 +35,35 @@ export const useLanguageSettings = () => {
     } = useStore_SelectableLanguageList();
 
 
+    // GET: Data is already loaded by BackendInitController at startup
+    // This function is kept for API compatibility but now just returns current store data
     const getSelectedPresetTabNumber = () => {
-        pendingSelectedPresetTabNumber();
-        asyncStdoutToPython("/get/data/selected_tab_no");
+        // Data is already in store from BackendInitController initialization
+        // No need to fetch - just return current value
+        return currentSelectedPresetTabNumber.data;
     };
 
-    const setSelectedPresetTabNumber = (preset_number) => {
+    const setSelectedPresetTabNumber = async (preset_number) => {
         pendingSelectedPresetTabNumber();
-
-        asyncStdoutToPython("/set/data/selected_tab_no", preset_number);
+        
+        try {
+            await invoke("set_config", {
+                config: { SELECTED_TAB_NO: preset_number }
+            });
+            updateSelectedPresetTabNumber(preset_number);
+        } catch (error) {
+            console.error("Failed to set preset tab number:", error);
+        }
     };
 
 
+    // GET: Data is already loaded by BackendInitController at startup
     const getSelectedYourLanguages = () => {
-        pendingSelectedPresetTabNumber();
-        asyncStdoutToPython("/get/data/selected_your_languages");
+        // Data is already in store from BackendInitController initialization
+        return currentSelectedYourLanguages.data;
     };
 
-    const setSelectedYourLanguages = (selected_language_data) => {
+    const setSelectedYourLanguages = async (selected_language_data) => {
         pendingSelectedYourLanguages();
         const send_obj = {
             ...currentSelectedYourLanguages.data,
@@ -66,48 +75,101 @@ export const useLanguageSettings = () => {
                 }
             }
         };
-        asyncStdoutToPython("/set/data/selected_your_languages", send_obj);
+        
+        try {
+            await invoke("set_config", {
+                config: { SELECTED_YOUR_LANGUAGES: send_obj }
+            });
+            updateSelectedYourLanguages(send_obj);
+        } catch (error) {
+            console.error("Failed to set your languages:", error);
+        }
     };
 
 
+    // GET: Data is already loaded by BackendInitController at startup
     const getSelectedTargetLanguages = () => {
-        pendingSelectedTargetLanguages();
-        asyncStdoutToPython("/get/data/selected_target_languages");
+        // Data is already in store from BackendInitController initialization
+        return currentSelectedTargetLanguages.data;
     };
 
-    const setSelectedTargetLanguages = (selected_language_data) => {
+    const setSelectedTargetLanguages = async (selected_language_data) => {
         pendingSelectedTargetLanguages();
-        let send_obj = currentSelectedTargetLanguages.data;
-        send_obj[currentSelectedPresetTabNumber.data][selected_language_data.target_key].language = selected_language_data.language,
-        send_obj[currentSelectedPresetTabNumber.data][selected_language_data.target_key].country = selected_language_data.country,
-        asyncStdoutToPython("/set/data/selected_target_languages", send_obj);
+        let send_obj = { ...currentSelectedTargetLanguages.data };
+        send_obj[currentSelectedPresetTabNumber.data] = {
+            ...send_obj[currentSelectedPresetTabNumber.data],
+            [selected_language_data.target_key]: {
+                ...send_obj[currentSelectedPresetTabNumber.data][selected_language_data.target_key],
+                language: selected_language_data.language,
+                country: selected_language_data.country,
+            }
+        };
+        
+        try {
+            await invoke("set_config", {
+                config: { SELECTED_TARGET_LANGUAGES: send_obj }
+            });
+            updateSelectedTargetLanguages(send_obj);
+        } catch (error) {
+            console.error("Failed to set target languages:", error);
+        }
     };
 
-    const addTargetLanguage = () => {
+    const addTargetLanguage = async () => {
         pendingSelectedTargetLanguages();
-        let send_obj = currentSelectedTargetLanguages.data;
+        let send_obj = { ...currentSelectedTargetLanguages.data };
         let target_key = "2";
         if (send_obj[currentSelectedPresetTabNumber.data]["2"].enable === true) {
             target_key = "3";
         }
-        send_obj[currentSelectedPresetTabNumber.data][target_key].enable = true,
-        asyncStdoutToPython("/set/data/selected_target_languages", send_obj);
+        send_obj[currentSelectedPresetTabNumber.data] = {
+            ...send_obj[currentSelectedPresetTabNumber.data],
+            [target_key]: {
+                ...send_obj[currentSelectedPresetTabNumber.data][target_key],
+                enable: true,
+            }
+        };
+        
+        try {
+            await invoke("set_config", {
+                config: { SELECTED_TARGET_LANGUAGES: send_obj }
+            });
+            updateSelectedTargetLanguages(send_obj);
+        } catch (error) {
+            console.error("Failed to add target language:", error);
+        }
     };
-    const removeTargetLanguage = () => {
+
+    const removeTargetLanguage = async () => {
         pendingSelectedTargetLanguages();
-        let send_obj = currentSelectedTargetLanguages.data;
+        let send_obj = { ...currentSelectedTargetLanguages.data };
         let target_key = "3";
         if (send_obj[currentSelectedPresetTabNumber.data]["3"].enable === false) {
             target_key = "2";
         }
-        send_obj[currentSelectedPresetTabNumber.data][target_key].enable = false,
-        asyncStdoutToPython("/set/data/selected_target_languages", send_obj);
+        send_obj[currentSelectedPresetTabNumber.data] = {
+            ...send_obj[currentSelectedPresetTabNumber.data],
+            [target_key]: {
+                ...send_obj[currentSelectedPresetTabNumber.data][target_key],
+                enable: false,
+            }
+        };
+        
+        try {
+            await invoke("set_config", {
+                config: { SELECTED_TARGET_LANGUAGES: send_obj }
+            });
+            updateSelectedTargetLanguages(send_obj);
+        } catch (error) {
+            console.error("Failed to remove target language:", error);
+        }
     };
 
 
+    // GET: Data is already loaded by BackendInitController at startup
     const getTranslationEngines = () => {
-        pendingTranslationEngines();
-        asyncStdoutToPython("/get/data/selectable_translation_engines");
+        // Data is already in store from BackendInitController initialization
+        return currentTranslationEngines.data;
     };
 
     const updateTranslatorAvailability = (payload) => {
@@ -120,22 +182,83 @@ export const useLanguageSettings = () => {
     };
 
 
+    // GET: Data is already loaded by BackendInitController at startup
     const getSelectedTranslationEngines = () => {
-        pendingSelectedTranslationEngines();
-        asyncStdoutToPython("/get/data/selected_translation_engines");
+        // Data is already in store from BackendInitController initialization
+        return currentSelectedTranslationEngines.data;
     };
 
-    const setSelectedTranslationEngines = (selected_translator) => {
+    const setSelectedTranslationEngines = async (selected_translator) => {
         pendingSelectedTranslationEngines();
-        let send_obj = currentSelectedTranslationEngines.data;
+        let send_obj = { ...currentSelectedTranslationEngines.data };
         send_obj[currentSelectedPresetTabNumber.data] = selected_translator;
-        asyncStdoutToPython("/set/data/selected_translation_engines", send_obj);
+        
+        try {
+            // Use set_translation_engine for the active engine
+            await invoke("set_translation_engine", {
+                engine: selected_translator
+            });
+            // Also persist to config
+            await invoke("set_config", {
+                config: { SELECTED_TRANSLATION_ENGINES: send_obj }
+            });
+            updateSelectedTranslationEngines(send_obj);
+        } catch (error) {
+            console.error("Failed to set translation engine:", error);
+        }
     };
 
-    const swapSelectedLanguages = () => {
+    const swapSelectedLanguages = async () => {
         pendingSelectedYourLanguages();
         pendingSelectedTargetLanguages();
-        asyncStdoutToPython("/run/swap_your_language_and_target_language");
+        
+        try {
+            const response = await invoke("swap_languages");
+            // The swap_languages command should return the swapped languages
+            // Update the store with the new values
+            if (response?.result) {
+                const { your_languages, target_languages } = response.result;
+                if (your_languages) updateSelectedYourLanguages(your_languages);
+                if (target_languages) updateSelectedTargetLanguages(target_languages);
+            } else {
+                // Fallback: swap locally if backend doesn't return new values
+                const currentYour = currentSelectedYourLanguages.data;
+                const currentTarget = currentSelectedTargetLanguages.data;
+                const presetTab = currentSelectedPresetTabNumber.data;
+                
+                // Get the first target language to swap with your language
+                const yourLang = currentYour[presetTab]?.["1"];
+                const targetLang = currentTarget[presetTab]?.["1"];
+                
+                if (yourLang && targetLang) {
+                    const newYour = {
+                        ...currentYour,
+                        [presetTab]: {
+                            "1": {
+                                language: targetLang.language,
+                                country: targetLang.country,
+                                enable: true,
+                            }
+                        }
+                    };
+                    const newTarget = {
+                        ...currentTarget,
+                        [presetTab]: {
+                            ...currentTarget[presetTab],
+                            "1": {
+                                ...currentTarget[presetTab]["1"],
+                                language: yourLang.language,
+                                country: yourLang.country,
+                            }
+                        }
+                    };
+                    updateSelectedYourLanguages(newYour);
+                    updateSelectedTargetLanguages(newTarget);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to swap languages:", error);
+        }
     };
 
     const updateBothSelectedLanguages = (payload) => {
@@ -144,8 +267,10 @@ export const useLanguageSettings = () => {
     };
 
 
+    // GET: Data is already loaded by BackendInitController at startup
     const getSelectableLanguageList = () => {
-        asyncStdoutToPython("/get/data/selectable_language_list");
+        // Data is already in store from BackendInitController initialization
+        return currentSelectableLanguageList.data;
     };
 
 

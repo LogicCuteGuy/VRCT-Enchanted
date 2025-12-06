@@ -69,6 +69,21 @@ Download from anywhere you like.
 
 Just download and run the exe.
 
+## System Requirements
+
+### For Users
+- **OS**: Windows 10 or later (64-bit)
+- **Memory**: 4GB RAM minimum, 8GB recommended
+- **Storage**: 500MB for application + models
+- **Self-Contained**: Single executable with no external dependencies
+
+### For Developers
+- **Rust**: Latest stable toolchain (install via [rustup](https://rustup.rs/))
+- **Node.js**: Version 18 or later
+- **Build Tools**: 
+  - Windows: Visual Studio Build Tools with C++ support
+  - Or: Visual Studio 2019/2022 with "Desktop development with C++" workload
+
 # What is VRCT?
 VRCT is software that supports conversations between people who speak different languages by providing chat or voice translation.
 These features are designed for use within VRChat.
@@ -80,9 +95,16 @@ VRCT supports your conversations with
 - 🎙 **Transcription of audio from microphone**
 - 🔈 **Transcription of audio from Speaker**
 
-# Documents
-Initial setup, basic functions, and other features are also described.
-- [Documents Link](https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246?pvs=4)
+# Documentation
+
+### For Users
+- [User Documentation](https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246?pvs=4) - Setup, features, and usage
+- [Migration Guide](MIGRATION_GUIDE.md) - Upgrading from legacy versions
+
+### For Developers
+- [Architecture Documentation](ARCHITECTURE.md) - Technical architecture and design
+- [Contributing Guide](CONTRIBUTING.md) - Development setup and guidelines
+- [Build Instructions](#building-from-source) - See below for quick start
 
 # How to Use (YouTube)
 <div align="center">
@@ -90,6 +112,68 @@ Initial setup, basic functions, and other features are also described.
 [![](https://img.youtube.com/vi/rUTad037n8Q/0.jpg)](https://www.youtube.com/watch?v=rUTad037n8Q)
 
 <div align="left">
+
+## Technology Stack
+
+VRCT is built with modern, high-performance technologies:
+
+### Core Technologies
+- **Backend**: Pure Rust for high performance and reliability
+- **Frontend**: React + JavaScript
+- **Framework**: Tauri 2.x
+- **Build System**: Cargo + Vite
+
+### Key Libraries
+- **Audio**: `cpal` - Cross-platform audio I/O
+- **ML/AI**: `candle` - Rust ML framework for Whisper transcription
+- **Async Runtime**: `tokio` - High-performance async runtime
+- **Networking**: `reqwest`, `axum` - HTTP client and web framework
+- **Protocols**: `rosc` (OSC), `tokio-tungstenite` (WebSocket)
+- **Serialization**: `serde` - Type-safe serialization
+
+### Key Benefits of Rust Architecture
+- ⚡ **Fast startup time** - Native code execution
+- 💾 **Efficient memory usage** - Optimized memory management
+- 📦 **Single self-contained executable** - No external dependencies required
+- 🔒 **Enhanced type safety** - Compile-time error detection
+- 🚀 **Native performance** - Zero-cost abstractions
+- 🛡️ **Better reliability** - Memory safety without garbage collection
+
+## Building from Source
+
+### Prerequisites
+1. Install [Rust](https://rustup.rs/) (latest stable)
+2. Install [Node.js](https://nodejs.org/) (v18+)
+3. Install build tools:
+   - Windows: [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022) with C++ support
+
+### Build Steps
+```bash
+# Clone the repository
+git clone https://github.com/misyaguziya/VRCT.git
+cd VRCT
+
+# Install dependencies
+npm install
+
+# Development build (with hot reload)
+npm run dev
+
+# Production build
+npm run build
+```
+
+### Build Output
+- Executable: `src-tauri/target/release/VRCT.exe`
+- Installer: `src-tauri/target/release/bundle/nsis/VRCT_x.x.x_x64-setup.exe`
+
+### Troubleshooting Build Issues
+- **Rust not found**: Run `rustup update stable`
+- **Link errors**: Ensure Visual Studio Build Tools are installed
+- **Out of memory**: Close other applications or increase virtual memory
+- **Slow builds**: First build takes longer; subsequent builds are faster
+
+For more details, see [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Author
 - [みしゃ(misyaguzi)](https://github.com/misyaguziya) (Main Development)

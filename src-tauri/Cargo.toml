@@ -18,16 +18,85 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "=2.2.0", features = [] }
 
 [dependencies]
+# Tauri framework and plugins
 tauri = { version = "=2.5.1", features = ["devtools"] }
 tauri-plugin-opener = "=2.2.6"
-serde = { version = "=1.0.219", features = ["derive"] }
-serde_json = "=1.0.140"
 tauri-plugin-fs = "=2.2.1"
 tauri-plugin-http = "=2.4.3"
 tauri-plugin-shell = "2.2.1"
-font-kit = "=0.14.2"
-reqwest = "=0.12.15"
+
+# Serialization
+serde = { version = "=1.0.219", features = ["derive"] }
+serde_json = "=1.0.140"
+serde_yaml = "0.9"
+
+# Core infrastructure - async runtime and error handling
+tokio = { version = "1.42", features = ["full"] }
+async-trait = "0.1"
+thiserror = "2.0"
+
+# Logging and tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+tracing-appender = "0.2"
+
+# HTTP client for API-based translators and model downloads
+reqwest = { version = "=0.12.15", features = ["json", "stream"] }
 base64 = "=0.22.1"
+
+# Audio processing - device enumeration and recording
+cpal = "0.15"
+ringbuf = "0.4"
+
+# OSC communication for VRChat integration
+rosc = "0.10"
+
+# WebSocket server for external integrations
+axum = { version = "0.7", features = ["ws"] }
+tokio-tungstenite = "0.24"
+futures-util = "0.3"
+
+# Whisper transcription - ML model inference
+hf-hub = "0.3"
+candle-core = "0.8"
+candle-nn = "0.8"
+candle-transformers = "0.8"
+tokenizers = "0.20"
+
+# VR overlay rendering
+openvr = { version = "0.8", optional = true }
+image = "0.25"
+rusttype = "0.9"
+font-kit = "=0.14.2"
+
+# Utilities
+dirs = "5.0"
+aho-corasick = "1.1"
+chrono = { version = "0.4", features = ["serde"] }
+
+[dev-dependencies]
+tempfile = "3.8"
+
+[features]
+default = []
+vr-overlay = ["openvr"]
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-global-shortcut = "=2.2.0"
+
+[profile.release]
+# Maximum optimization level
+opt-level = 3
+# Enable Link Time Optimization (LTO) for better performance
+# "fat" performs full LTO across all crates
+lto = "fat"
+# Use single codegen unit for better optimization (slower compile, faster runtime)
+codegen-units = 1
+# Strip debug symbols from binary to reduce size
+strip = true
+# Abort on panic instead of unwinding for smaller binary
+panic = "abort"
+# Enable additional optimizations
+overflow-checks = false
+# Optimize for size while maintaining performance
+# opt-level = "z" can be used if binary size is critical

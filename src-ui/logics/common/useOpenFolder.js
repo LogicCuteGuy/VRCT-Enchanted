@@ -1,27 +1,26 @@
-import { useStdoutToPython } from "@useStdoutToPython";
+import { invoke } from "@tauri-apps/api/core";
 
 export const useOpenFolder = () => {
-    const { asyncStdoutToPython } = useStdoutToPython();
+    const openFolder_MessageLogs = async () => {
+        try {
+            await invoke("open_logs_folder");
+            console.log("Opened Directory, Message Logs");
+        } catch (error) {
+            console.error("Failed to open logs folder:", error);
+        }
+    };
 
-    const openFolder_MessageLogs = () => {
-        asyncStdoutToPython("/run/open_filepath_logs");
-    };
-    const openedFolder_MessageLogs = () => {
-        console.log("Opened Directory, Message Logs");
-    };
-
-    const openFolder_ConfigFile = () => {
-        asyncStdoutToPython("/run/open_filepath_config_file");
-    };
-    const openedFolder_ConfigFile = () => {
-        console.log("Opened Directory, Config File");
+    const openFolder_ConfigFile = async () => {
+        try {
+            await invoke("open_config_folder");
+            console.log("Opened Directory, Config File");
+        } catch (error) {
+            console.error("Failed to open config folder:", error);
+        }
     };
 
     return {
         openFolder_MessageLogs,
         openFolder_ConfigFile,
-
-        openedFolder_MessageLogs,
-        openedFolder_ConfigFile,
     };
 };

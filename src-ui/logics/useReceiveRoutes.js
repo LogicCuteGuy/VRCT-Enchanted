@@ -17,8 +17,8 @@ export const STATIC_ROUTE_META_LIST = [
     { endpoint: "/get/data/main_window_geometry", ns: common, hook_name: "useWindow", method_name: "restoreWindowGeometry" },
     { endpoint: "/set/data/main_window_geometry", ns: null, hook_name: null, method_name: null },
 
-    { endpoint: "/run/open_filepath_logs", ns: common, hook_name: "useOpenFolder", method_name: "openedFolder_MessageLogs" },
-    { endpoint: "/run/open_filepath_config_file", ns: common, hook_name: "useOpenFolder", method_name: "openedFolder_ConfigFile" },
+    { endpoint: "/run/open_filepath_logs", ns: null, hook_name: null, method_name: null },
+    { endpoint: "/run/open_filepath_config_file", ns: null, hook_name: null, method_name: null },
 
     { endpoint: "/get/data/connected_lmstudio", ns: common, hook_name: "useLLMConnection", method_name: "setConnectionStatus_LMStudio" },
     { endpoint: "/run/lmstudio_connection", ns: common, hook_name: "useLLMConnection", method_name: "setConnectionStatus_LMStudio" },

@@ -1,5 +1,5 @@
 import * as stores from "@store";
-import { useStdoutToPython } from "@useStdoutToPython";
+import { invoke } from "@tauri-apps/api/core";
 import { useNotificationStatus } from "@logics_common";
 import { arrayToObject, arrayToIdLabel, speakerDeviceArrayToObject } from "@utils";
 
@@ -19,7 +19,6 @@ const transformResponse = (transformName, payload) => {
 };
 
 export const useSettingsLogics = (settingsArray, Category) => {
-    const { asyncStdoutToPython } = useStdoutToPython();
     const { showNotification_SaveSuccess } = useNotificationStatus();
 
     const filtered = settingsArray.filter((s) => s.Category === Category);
@@ -68,29 +67,50 @@ export const useSettingsLogics = (settingsArray, Category) => {
 
         // To use by UI------------------------------------
         const buildGet = () => {
-            return () => {
+            return async () => {
                 if (pending) pending();
-                asyncStdoutToPython(`/get/data/${s.base_endpoint_name}`);
+                try {
+                    await invoke("get_config");
+                } catch (error) {
+                    console.error(`Failed to get config for ${s.base_endpoint_name}:`, error);
+                }
             };
         };
 
         const buildSet = () => {
-            return (value) => {
+            return async (value) => {
                 if (pending) pending();
-                asyncStdoutToPython(`/set/data/${s.base_endpoint_name}`, value);
+                try {
+                    const config = { [s.base_endpoint_name]: value };
+                    await invoke("set_config", { config });
+                } catch (error) {
+                    console.error(`Failed to set config for ${s.base_endpoint_name}:`, error);
+                }
             };
         };
 
         const buildDelete = () => {
-            return (value) => {
+            return async (value) => {
                 if (pending) pending();
-                asyncStdoutToPython(`/delete/data/${s.base_endpoint_name}`, value);
+                try {
+                    // For delete operations, we'll use set_config with null or empty value
+                    const config = { [s.base_endpoint_name]: null };
+                    await invoke("set_config", { config });
+                } catch (error) {
+                    console.error(`Failed to delete config for ${s.base_endpoint_name}:`, error);
+                }
             };
         };
 
         const buildRun = () => {
-            return () => {
-                asyncStdoutToPython(`/run/${s.base_endpoint_name}`);
+            return async () => {
+                try {
+                    // Run commands are typically action commands, not config operations
+                    // The specific command would depend on the endpoint name
+                    await invoke(s.base_endpoint_name);
+                } catch (error) {
+                    console.error(`Failed to run command ${s.base_endpoint_name}:`, error);
+                }
             };
         };
 
@@ -152,13 +172,14 @@ export const useSettingsLogics = (settingsArray, Category) => {
 
         if (s.logics_template_id === "toggle_enable_disable") {
             result[getExportName] = buildGet();
-            result[toggleExportName] = () => {
+            result[toggleExportName] = async () => {
                 if (pending) pending();
                 const isOn = current && current.data;
-                if (isOn) {
-                    asyncStdoutToPython(`/set/disable/${s.base_endpoint_name}`);
-                } else {
-                    asyncStdoutToPython(`/set/enable/${s.base_endpoint_name}`);
+                try {
+                    const config = { [s.base_endpoint_name]: !isOn };
+                    await invoke("set_config", { config });
+                } catch (error) {
+                    console.error(`Failed to toggle ${s.base_endpoint_name}:`, error);
                 }
             };
 
@@ -205,8 +226,12 @@ export const useSettingsLogics = (settingsArray, Category) => {
                 });
             };
 
-            result[`download${base}`] = (weight_type) => {
-                asyncStdoutToPython(`/run/download_${s.base_endpoint_name}`, weight_type);
+            result[`download${base}`] = async (weight_type) => {
+                try {
+                    await invoke(`download_${s.base_endpoint_name}`, { weightType: weight_type });
+                } catch (error) {
+                    console.error(`Failed to download ${s.base_endpoint_name}:`, error);
+                }
             };
 
             continue;
@@ -218,13 +243,15 @@ export const useSettingsLogics = (settingsArray, Category) => {
 
 
 export const useConfigFunctions = (Category) => {
-    const { asyncStdoutToPython } = useStdoutToPython();
-
     switch (Category) {
         case "Vr":
             return {
-                sendTextToOverlay: (text) => {
-                    asyncStdoutToPython("/run/send_text_overlay", text);
+                sendTextToOverlay: async (text) => {
+                    try {
+                        await invoke("send_text_overlay", { text });
+                    } catch (error) {
+                        console.error("Failed to send text to overlay:", error);
+                    }
                 },
             };
         default:

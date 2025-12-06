@@ -1,5 +1,5 @@
 import { store, useStore_Hotkeys } from "@store";
-import { useStdoutToPython } from "@useStdoutToPython";
+import { invoke } from "@tauri-apps/api/core";
 import { useNotificationStatus } from "@logics_common";
 import { useMainFunction } from "@logics_main";
 import { register, unregisterAll, isRegistered } from "@tauri-apps/plugin-global-shortcut";
@@ -7,7 +7,6 @@ import { register, unregisterAll, isRegistered } from "@tauri-apps/plugin-global
 export const useHotkeys = () => {
     const appWindow = store.appWindow;
 
-    const { asyncStdoutToPython } = useStdoutToPython();
     const { currentHotkeys, updateHotkeys, pendingHotkeys } = useStore_Hotkeys();
     const {
         toggleTranslation,
@@ -16,13 +15,17 @@ export const useHotkeys = () => {
     } = useMainFunction();
 
 
-    const getHotkeys = () => {
+    const getHotkeys = async () => {
         pendingHotkeys();
-        asyncStdoutToPython("/get/data/hotkeys");
+        try {
+            await invoke("get_config");
+        } catch (error) {
+            console.error("Failed to get hotkeys:", error);
+        }
     };
     const { showNotification_SaveSuccess, showNotification_Error, closeNotification } = useNotificationStatus();
 
-    const setHotkeys = (hotkeys) => {
+    const setHotkeys = async (hotkeys) => {
         pendingHotkeys();
 
         const updatedHotkeys = { ...currentHotkeys.data, ...hotkeys };
@@ -45,9 +48,15 @@ export const useHotkeys = () => {
         updateHotkeys(updatedHotkeys);
 
         if (conflictingKeys.length === 0) {
-            asyncStdoutToPython("/set/data/hotkeys", updatedHotkeys);
-            closeNotification();
-            return true;
+            try {
+                const config = { hotkeys: updatedHotkeys };
+                await invoke("set_config", { config });
+                closeNotification();
+                return true;
+            } catch (error) {
+                console.error("Failed to set hotkeys:", error);
+                return false;
+            }
         } else {
             return false;
         }

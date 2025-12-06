@@ -3,17 +3,15 @@ build/
 dist/
 /config.json
 memo.txt
-*.pyc
 logs/
-.venv/
-.venv_cuda/
 weights/
 .vscode
 error.log
 *.exe
-*.ipynb
 VRCT.zip
-VRCT_cuda.zip
+
+# Python archive (migration backup)
+src-python-archive.zip
 
 # Added by WebUI migration
 # Logs
@@ -41,7 +39,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.venv
 
 # Customize
 /build

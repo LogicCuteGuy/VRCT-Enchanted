@@ -1,3 +1,4 @@
+import { invoke } from "@tauri-apps/api/core";
 import {
     useStore_MicVolume,
     useStore_SpeakerVolume,
@@ -5,10 +6,7 @@ import {
     useStore_SpeakerThresholdCheckStatus,
 } from "@store";
 
-import { useStdoutToPython } from "@useStdoutToPython";
-
 export const useVolume = () => {
-    const { asyncStdoutToPython } = useStdoutToPython();
     const { updateMicVolume } = useStore_MicVolume();
     const { updateSpeakerVolume } = useStore_SpeakerVolume();
     const {
@@ -23,13 +21,21 @@ export const useVolume = () => {
     } = useStore_SpeakerThresholdCheckStatus();
 
     return {
-        volumeCheckStart_Mic: () => {
+        volumeCheckStart_Mic: async () => {
             pendingMicThresholdCheckStatus();
-            asyncStdoutToPython("/set/enable/check_mic_threshold");
+            try {
+                await invoke("enable_mic_threshold_check");
+            } catch (error) {
+                console.error("Failed to enable mic threshold check:", error);
+            }
         },
-        volumeCheckStop_Mic: () => {
+        volumeCheckStop_Mic: async () => {
             pendingMicThresholdCheckStatus();
-            asyncStdoutToPython("/set/disable/check_mic_threshold");
+            try {
+                await invoke("disable_mic_threshold_check");
+            } catch (error) {
+                console.error("Failed to disable mic threshold check:", error);
+            }
         },
         updateVolumeVariable_Mic: (payload) => {
             updateMicVolume(payload);
@@ -40,14 +46,22 @@ export const useVolume = () => {
             if (payload === false) updateMicVolume("0");
         },
 
-        volumeCheckStart_Speaker: () => {
+        volumeCheckStart_Speaker: async () => {
             updateSpeakerVolume("0");
             pendingSpeakerThresholdCheckStatus();
-            asyncStdoutToPython("/set/enable/check_speaker_threshold");
+            try {
+                await invoke("enable_speaker_threshold_check");
+            } catch (error) {
+                console.error("Failed to enable speaker threshold check:", error);
+            }
         },
-        volumeCheckStop_Speaker: () => {
+        volumeCheckStop_Speaker: async () => {
             pendingSpeakerThresholdCheckStatus();
-            asyncStdoutToPython("/set/disable/check_speaker_threshold");
+            try {
+                await invoke("disable_speaker_threshold_check");
+            } catch (error) {
+                console.error("Failed to disable speaker threshold check:", error);
+            }
         },
         updateVolumeVariable_Speaker: (payload) => {
             updateSpeakerVolume(payload);

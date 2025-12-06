@@ -11,7 +11,6 @@ import {
     useStore_FetchedPluginsInfo,
     useStore_LoadedPlugins,
 } from "@store";
-import { useStdoutToPython } from "@useStdoutToPython";
 
 import { transform } from "@babel/standalone";
 import { writeFile, mkdir, exists, remove, readDir, BaseDirectory, readTextFile } from "@tauri-apps/plugin-fs";
@@ -38,7 +37,6 @@ const PLUGIN_LIST_URL = getPluginsList();
 export const usePlugins = () => {
     const { t, i18n } = useI18n();
     const { showNotification_SaveSuccess, showNotification_Success, showNotification_Error } = useNotificationStatus();
-    const { asyncStdoutToPython } = useStdoutToPython();
 
     const { currentFetchedPluginsInfo, updateFetchedPluginsInfo, pendingFetchedPluginsInfo, errorFetchedPluginsInfo } = useStore_FetchedPluginsInfo();
     const { currentLoadedPlugins, updateLoadedPlugins, pendingLoadedPlugins } = useStore_LoadedPlugins();
@@ -359,9 +357,14 @@ export const usePlugins = () => {
     };
 
 
-    const setSavedPluginsStatus = (plugins_status) => {
+    const setSavedPluginsStatus = async (plugins_status) => {
         pendingSavedPluginsStatus();
-        asyncStdoutToPython("/set/data/plugins_status", plugins_status);
+        try {
+            const config = { plugins_status };
+            await invoke("set_config", { config });
+        } catch (error) {
+            console.error("Failed to set plugins status:", error);
+        }
     };
 
     // init時、currentPluginsDataからのデータではデータ更新が間に合わないので、currentSavedPluginsStatusから直接取得

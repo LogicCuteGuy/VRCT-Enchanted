@@ -1,19 +1,27 @@
+import { invoke } from "@tauri-apps/api/core";
 import { useStore_IsMainPageCompactMode } from "@store";
-import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useIsMainPageCompactMode = () => {
-    const { asyncStdoutToPython } = useStdoutToPython();
-    const { currentIsMainPageCompactMode, updateIsMainPageCompactMode } = useStore_IsMainPageCompactMode();
+    const { currentIsMainPageCompactMode, updateIsMainPageCompactMode, pendingIsMainPageCompactMode } = useStore_IsMainPageCompactMode();
 
+    // GET: Data is already loaded by BackendInitController at startup
+    // This function is kept for API compatibility but now just returns current store data
     const getIsMainPageCompactMode = () => {
-        asyncStdoutToPython("/get/data/main_window_sidebar_compact_mode");
+        // Data is already in store from BackendInitController initialization
+        return currentIsMainPageCompactMode.data;
     };
 
-    const toggleIsMainPageCompactMode = () => {
-        if (currentIsMainPageCompactMode.data) {
-            asyncStdoutToPython("/set/disable/main_window_sidebar_compact_mode");
-        } else {
-            asyncStdoutToPython("/set/enable/main_window_sidebar_compact_mode");
+    const toggleIsMainPageCompactMode = async () => {
+        pendingIsMainPageCompactMode();
+        const newValue = !currentIsMainPageCompactMode.data;
+        
+        try {
+            await invoke("set_config", {
+                config: { MAIN_WINDOW_SIDEBAR_COMPACT_MODE: newValue }
+            });
+            updateIsMainPageCompactMode(newValue);
+        } catch (error) {
+            console.error("Failed to toggle compact mode:", error);
         }
     };
 

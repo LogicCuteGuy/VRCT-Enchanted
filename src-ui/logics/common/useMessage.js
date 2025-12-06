@@ -1,26 +1,18 @@
+import { invoke } from "@tauri-apps/api/core";
 import {
     useStore_MessageLogs,
     useStore_MessageInputValue,
     store,
 } from "@store";
 
-import { useStdoutToPython } from "@useStdoutToPython";
-
-const COOLDOWN = 2000; // 2 seconds
-
 export const useMessage = () => {
     const { currentMessageLogs, addMessageLogs, updateMessageLogs } = useStore_MessageLogs();
     const { currentMessageInputValue, updateMessageInputValue } = useStore_MessageInputValue();
-    const { asyncStdoutToPython } = useStdoutToPython();
 
-    const sendMessage = (message) => {
+    const sendMessage = async (message) => {
         const uuid = crypto.randomUUID();
-        const send_message_object = {
-            id: uuid,
-            message: message,
-        };
-        asyncStdoutToPython("/run/send_message_box", send_message_object);
 
+        // Add message to logs immediately with pending status
         addMessageLogs({
             id: uuid,
             category: "sent",
@@ -31,6 +23,13 @@ export const useMessage = () => {
                 translations: [],
             },
         });
+
+        // Send message via Tauri command
+        try {
+            await invoke("send_message_box", { message });
+        } catch (error) {
+            console.error("Failed to send message:", error);
+        }
     };
 
     const addSystemMessageLog = (message) => {
@@ -67,16 +66,24 @@ export const useMessage = () => {
         addMessageLogs(message_object);
     };
 
-    const startTyping = () => {
+    const startTyping = async () => {
         const now = Date.now();
         if (now - store.last_executed_time_startTyping >= 2000) {
             store.last_executed_time_startTyping = now;
-            asyncStdoutToPython("/run/typing_message_box");
+            try {
+                await invoke("start_typing");
+            } catch (error) {
+                console.error("Failed to start typing indicator:", error);
+            }
         }
     };
 
-    const stopTyping = () => {
-        asyncStdoutToPython("/run/stop_typing_message_box");
+    const stopTyping = async () => {
+        try {
+            await invoke("stop_typing");
+        } catch (error) {
+            console.error("Failed to stop typing indicator:", error);
+        }
     };
 
     return {

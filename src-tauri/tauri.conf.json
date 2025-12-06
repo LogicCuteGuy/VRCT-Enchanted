@@ -46,13 +46,6 @@
             "icons/icon.icns",
             "icons/icon.ico"
         ],
-        "externalBin": [
-            "bin/VRCT-sidecar"
-        ],
-        "resources": {
-            "bin/_internal": "_internal",
-            "plugins": "plugins"
-        },
         "windows": {
             "nsis": {
                 "template": "nsis/template.nsi",

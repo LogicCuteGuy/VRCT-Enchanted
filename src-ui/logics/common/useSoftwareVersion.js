@@ -1,16 +1,23 @@
 import semver from "semver";
+import { invoke } from "@tauri-apps/api/core";
 
 import { useStore_SoftwareVersion, useStore_LatestSoftwareVersionInfo } from "@store";
-import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useSoftwareVersion = () => {
-    const { asyncStdoutToPython } = useStdoutToPython();
     const { currentLatestSoftwareVersionInfo, updateLatestSoftwareVersionInfo } = useStore_LatestSoftwareVersionInfo();
     const { currentSoftwareVersion, updateSoftwareVersion, pendingSoftwareVersion } = useStore_SoftwareVersion();
 
-    const getSoftwareVersion = () => {
+    const getSoftwareVersion = async () => {
         pendingSoftwareVersion();
-        asyncStdoutToPython("/get/data/version");
+        try {
+            const response = await invoke("get_version");
+            const version = response?.result?.version || response?.version;
+            if (version) {
+                updateSoftwareVersion(version);
+            }
+        } catch (error) {
+            console.error("Failed to get software version:", error);
+        }
     };
 
     const updateSoftwareVersionInfo = (payload) => {

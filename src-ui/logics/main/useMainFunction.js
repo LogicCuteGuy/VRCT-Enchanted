@@ -1,3 +1,4 @@
+import { invoke } from "@tauri-apps/api/core";
 import { store } from "@store";
 
 import {
@@ -6,7 +7,6 @@ import {
     useStore_TranscriptionReceiveStatus,
     useStore_ForegroundStatus,
 } from "@store";
-import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useMainFunction = () => {
     const appWindow = store.appWindow;
@@ -31,14 +31,12 @@ export const useMainFunction = () => {
         updateForegroundStatus,
     } = useStore_ForegroundStatus();
 
-    const { asyncStdoutToPython } = useStdoutToPython();
-
     const setTranslation = (to_enable) => {
         pendingTranslationStatus();
         if (to_enable) {
-            asyncStdoutToPython("/set/enable/translation");
+            invoke("enable_translation");
         } else {
-            asyncStdoutToPython("/set/disable/translation");
+            invoke("disable_translation");
         }
     };
     const toggleTranslation = () => {
@@ -50,9 +48,9 @@ export const useMainFunction = () => {
     const setTranscriptionSend = (to_enable) => {
         pendingTranscriptionSendStatus();
         if (to_enable) {
-            asyncStdoutToPython("/set/enable/transcription_send");
+            invoke("enable_transcription_send");
         } else {
-            asyncStdoutToPython("/set/disable/transcription_send");
+            invoke("disable_transcription_send");
         }
     };
     const toggleTranscriptionSend = () => {
@@ -64,9 +62,9 @@ export const useMainFunction = () => {
     const setTranscriptionReceive = (to_enable) => {
         pendingTranscriptionReceiveStatus();
         if (to_enable) {
-            asyncStdoutToPython("/set/enable/transcription_receive");
+            invoke("enable_transcription_receive");
         } else {
-            asyncStdoutToPython("/set/disable/transcription_receive");
+            invoke("disable_transcription_receive");
         }
     };
     const toggleTranscriptionReceive = () => {
